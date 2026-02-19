@@ -21,20 +21,18 @@ class CommandProcessor:
         #берем строку от 5 символа, чистим от пробелов и вызываем нужный метод.
 
         # ADD команда
-
         if line.startswith("ADD"):
             return self.process_add(line[4:].strip())
 
         # REM content~"text"
-
         if line.startswith("REM"):
             return self.process_rem(line[4:].strip())
 
         # PRINT - просто вызываем сразу метод вывода из репозитория
-
         if line == "PRINT":
             return self.repo.print_all()
-        return print("Недопустимая команда в файле:", line)
+            
+        print("Недопустимая команда в файле:", line)
 
     def parse_args(self, arg_string: str):
         """Парсит строку аргументов вида key="value";key2="value2" в словарь."""
@@ -53,6 +51,10 @@ class CommandProcessor:
         #разбиваем строку APHORISM;content="Жизнь — это движение";author="Аристотель"
         #на два, тип фразы отпраляем в type_name
         #аргументы цельной строкой отправляем в args
+        if ";" not in data:
+            print(f"Ошибка в команде ADD: отсутствует точка с запятой в '{data}'")
+            return
+            
         type_name, args = data.split(";", 1)
 
         #делаем из аргементов кортеж
@@ -61,6 +63,8 @@ class CommandProcessor:
         try:
             obj = Artifact.create(type_name, **args)
             self.repo.add(obj)
+        except KeyError as e:
+            print(f"Ошибка: отсутствует обязательный параметр {e} для типа {type_name}")
         except ValueError as e:
             print(e)
 
@@ -69,12 +73,23 @@ class CommandProcessor:
     def process_rem(self, data: str):
         """Обрабатывает команду REM, удаляя объекты из репозитория по условию."""
         # пример: content~"abc"
-        attr, value = data.split("~")
-        value = value.strip().strip("\"")
-        self.repo.remove_by_condition(attr, value)
+        if "~" not in data:
+            print(f"Ошибка в команде REM: отсутствует символ '~' в '{data}'")
+            return
+            
+        try:
+            attr, value = data.split("~", 1)
+            value = value.strip().strip("\"")
+            self.repo.remove_by_condition(attr, value)
+        except Exception as e:
+            print(f"Ошибка при обработке команды REM '{data}': {e}")
 
     def execute_file(self, filename: str) -> None:
         """Читает команды из файла и выполняет их."""
-        with open(filename, "r", encoding="utf-8") as f:
-            for line in f:
-                self.process_line(line)
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                for line in f:
+                    self.process_line(line)
+        except FileNotFoundError:
+            print(f"Файл {filename} не найден")
+            raise

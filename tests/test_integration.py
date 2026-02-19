@@ -70,9 +70,9 @@ class TestIntegration(unittest.TestCase):
         commands = [
             'ADD APHORISM;content="Знание — сила";author="Фрэнсис Бэкон"',
             'ADD UNKNOWN;content="test";author="test"',  # Неверный тип
-            'REM invalid_format',  # Неверный формат REM
+            'REM invalid_format',  # Неверный формат REM (без ~)
             'INVALID COMMAND',  # Неверная команда
-            'ADD PROVERB;content="Без труда..."'  # Неполные аргументы
+            'ADD PROVERB;content="Без труда..."'  # Неполные аргументы (нет country)
         ]
         
         with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', delete=False) as f:
@@ -87,13 +87,17 @@ class TestIntegration(unittest.TestCase):
                 processor.execute_file(temp_filename)
             
             output = f.getvalue()
+            print("DEBUG OUTPUT:", output)  # Для отладки
             
             # Проверяем, что все ошибки были обработаны
             self.assertIn("Неизвестный тип: UNKNOWN", output)
+            self.assertIn("Ошибка в команде REM: отсутствует символ '~' в 'invalid_format'", output)
             self.assertIn("Недопустимая команда в файле: INVALID COMMAND", output)
+            self.assertIn("Ошибка: отсутствует обязательный параметр 'country' для типа PROVERB", output)
             
             # Должен добавиться только первый элемент
             self.assertEqual(len(processor.repo.items), 1)
+            self.assertEqual(processor.repo.items[0].content, "Знание — сила")
             
         finally:
             os.unlink(temp_filename)

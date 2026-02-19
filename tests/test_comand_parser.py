@@ -99,8 +99,17 @@ class TestCommandProcessor(unittest.TestCase):
         """Тест обработки команды ADD с отсутствующими аргументами."""
         line = 'ADD APHORISM;content="test"'  # Нет author
         
-        with self.assertRaises(KeyError):
+        # Перехватываем вывод
+        f = StringIO()
+        with redirect_stdout(f):
             self.processor.process_line(line)
+        
+        output = f.getvalue().strip()
+        # Проверяем, что появилось сообщение об ошибке
+        self.assertIn("Ошибка: отсутствует обязательный параметр", output)
+        self.assertIn("'author'", output)
+        # Проверяем, что объект НЕ добавился
+        self.assertEqual(len(self.processor.repo.items), 0)
     
     def test_process_rem_by_content(self):
         """Тест обработки команды REM по content."""
@@ -138,8 +147,14 @@ class TestCommandProcessor(unittest.TestCase):
         """Тест обработки команды REM с неверным форматом."""
         line = 'REM content="test"'  # Должно быть ~, а не =
         
-        with self.assertRaises(ValueError):
+        # Перехватываем вывод
+        f = StringIO()
+        with redirect_stdout(f):
             self.processor.process_line(line)
+        
+        output = f.getvalue().strip()
+        # Проверяем, что появилось сообщение об ошибке
+        self.assertIn("Ошибка в команде REM: отсутствует символ '~'", output)
     
     def test_process_print(self):
         """Тест обработки команды PRINT."""
