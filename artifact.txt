@@ -1,0 +1,10 @@
+ADD APHORISM;content="Жизнь — это движение";author="Аристотель"
+ADD PROVERB;content="Без труда не выловишь и рыбку из пруда";country="Россия"
+ADD APHORISM;content="Чтобы дойти до цели, надо прежде всего идти";author="Оноре де Бальзак"
+ADD TEXT;content="ASD ASSDAS ASDASSD";author="ASDASD ASD"
+PRINT
+REM content~"рыбку"
+PRINT
+REM author~"Аристотель"
+PRINT
+UNKCOMMAND APHORISM;content="Чтобы дойти до цели, надо прежде всего идти";author="Оноре де Бальзак"
